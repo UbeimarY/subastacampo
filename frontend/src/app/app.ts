@@ -1,15 +1,19 @@
 import { Component, inject } from '@angular/core';
-import { RouterLink, RouterOutlet } from '@angular/router';
+import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './core/auth.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive],
   template: `
     <header class="barra">
       <a routerLink="/" class="marca">🌾 SubastaCampo</a>
       <nav>
         @if (auth.usuario(); as usuario) {
+          <a routerLink="/" routerLinkActive="activo" [routerLinkActiveOptions]="{ exact: true }">Subastas</a>
+          @if (usuario.rol === 'productor') {
+            <a routerLink="/mis-productos" routerLinkActive="activo">Mis productos</a>
+          }
           <span class="usuario">
             {{ usuario.nombre }} <span class="insignia">{{ usuario.rol }}</span>
           </span>
@@ -28,4 +32,3 @@ import { AuthService } from './core/auth.service';
 export class App {
   auth = inject(AuthService);
 }
-

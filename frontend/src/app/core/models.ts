@@ -56,3 +56,36 @@ export interface Subasta {
 export interface SubastaConProducto extends Subasta {
   producto: Producto;
 }
+
+export type Categoria = 'frutas' | 'hortalizas' | 'tuberculos' | 'granos' | 'lacteos' | 'otros';
+export type Unidad = 'kg' | 'arroba' | 'bulto' | 'canastilla' | 'unidad';
+
+export interface ProductoCrear {
+  nombre: string;
+  descripcion: string | null;
+  categoria: Categoria;
+  cantidad: number;
+  unidad: Unidad;
+  fecha_cosecha: string;
+  vida_util_dias: number;
+}
+
+export interface SubastaCrear {
+  producto_id: number;
+  precio_inicial: number;
+  incremento_minimo: number;
+  duracion_minutos: number;
+}
+
+export interface PrecioSugerido {
+  precio_sugerido: string;
+  rango_min: string;
+  rango_max: string;
+  precio_por_kg: string;
+  cantidad_kg: number;
+  dias_restantes: number;
+  demanda_categoria: number;
+  factores: string[];
+  modelo_version: string;
+}
+

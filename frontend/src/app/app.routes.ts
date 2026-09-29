@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, invitadoGuard } from './core/auth.guard';
+import { authGuard, invitadoGuard, productorGuard } from './core/auth.guard';
 
 export const routes: Routes = [
   {
@@ -16,6 +16,11 @@ export const routes: Routes = [
     path: 'registro',
     canActivate: [invitadoGuard],
     loadComponent: () => import('./pages/registro/registro').then((m) => m.Registro),
+  },
+    {
+    path: 'mis-productos',
+    canActivate: [authGuard, productorGuard],
+    loadComponent: () => import('./pages/mis-productos/mis-productos').then((m) => m.MisProductos),
   },
   { path: '**', redirectTo: '' },
 ];

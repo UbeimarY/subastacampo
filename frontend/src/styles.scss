@@ -33,7 +33,8 @@ a { color: var(--verde); }
 
   a { color: #fff; text-decoration: none; }
   nav { display: flex; align-items: center; gap: 1rem; }
-}
+
+}  nav a.activo { text-decoration: underline; text-underline-offset: 6px; }
 
 .marca { font-weight: 700; font-size: 1.2rem; }
 
