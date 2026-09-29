@@ -6,6 +6,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.models import EstadoSubasta, Puja, Subasta, Usuario
+from app.database import SessionLocal
+from app.schemas import SubastaRespuesta
 
 VENTANA_EXTENSION = timedelta(minutes=2)
 
@@ -58,3 +60,21 @@ def registrar_puja(subasta_id: int, comprador: Usuario, monto: Decimal, db: Sess
     db.commit()
     db.refresh(puja)
     return puja
+
+def cerrar_vencidas() -> list[dict]:
+    """Cierra todas las subastas vencidas y devuelve un evento por cada una."""
+    with SessionLocal() as db:
+        vencidas = db.scalars(
+            select(Subasta)
+            .where(Subasta.estado == EstadoSubasta.activa, Subasta.fecha_fin <= ahora())
+            .with_for_update()
+        ).all()
+        eventos = []
+        for subasta in vencidas:
+            if cerrar_si_vencida(subasta, db):
+                eventos.append({
+                    "tipo": "subasta_finalizada",
+                    "subasta": SubastaRespuesta.model_validate(subasta).model_dump(mode="json"),
+                })
+        db.commit()
+        return eventos

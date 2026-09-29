@@ -1,11 +1,13 @@
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import EstadoSubasta, Producto, Subasta, Usuario
+from app.realtime import gestor
 from app.schemas import PujaCrear, PujaRespuesta, SubastaCrear, SubastaDetalle, SubastaRespuesta
 from app.security import requiere_comprador, requiere_productor
 from app.services.subastas import ahora, cerrar_si_vencida, registrar_puja
@@ -69,11 +71,27 @@ def obtener_subasta(subasta_id: int, db: Session = Depends(get_db)):
     return subasta
 
 
+# Función auxiliar: SIN decorador. No es un endpoint.
+def _pujar_en_hilo(subasta_id: int, comprador: Usuario, monto, db: Session):
+    """Trabajo bloqueante (base de datos). Corre en un hilo aparte, fuera del Event Loop."""
+    puja = registrar_puja(subasta_id, comprador, monto, db)
+    subasta = db.get(Subasta, subasta_id)
+    respuesta = PujaRespuesta.model_validate(puja)
+    evento = {
+        "tipo": "nueva_puja",
+        "puja": respuesta.model_dump(mode="json"),
+        "subasta": SubastaRespuesta.model_validate(subasta).model_dump(mode="json"),
+    }
+    return respuesta, evento
+
+
 @router.post("/{subasta_id}/pujas", response_model=PujaRespuesta, status_code=status.HTTP_201_CREATED)
-def pujar(
+async def pujar(
     subasta_id: int,
     datos: PujaCrear,
     comprador: Usuario = Depends(requiere_comprador),
     db: Session = Depends(get_db),
 ):
-    return registrar_puja(subasta_id, comprador, datos.monto, db)
+    respuesta, evento = await run_in_threadpool(_pujar_en_hilo, subasta_id, comprador, datos.monto, db)
+    await gestor.difundir(subasta_id, evento)
+    return respuesta
