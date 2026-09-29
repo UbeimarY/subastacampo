@@ -8,7 +8,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
-from app.models import Usuario
+from app.models import RolUsuario, Usuario
 
 password_hash = PasswordHash.recommended()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -44,4 +44,9 @@ def get_usuario_actual(
     usuario = db.get(Usuario, usuario_id)
     if usuario is None:
         raise error
+    return usuario
+
+def requiere_productor(usuario: Usuario = Depends(get_usuario_actual)) -> Usuario:
+    if usuario.rol != RolUsuario.productor:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Solo los productores pueden realizar esta acción")
     return usuario
