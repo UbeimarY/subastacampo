@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Variables de entorno (nunca subir credenciales)
+.env
+
+# Node / Angular
+node_modules/
+dist/
+.angular/
+
+# Editor / sistema
+.vscode/
+.idea/
+.DS_Store
