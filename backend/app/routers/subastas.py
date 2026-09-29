@@ -3,12 +3,14 @@ from datetime import timedelta
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.database import get_db
 from app.models import EstadoSubasta, Producto, Subasta, Usuario, Puja
 from app.realtime import gestor
-from app.schemas import PujaCrear, PujaRespuesta, SubastaCrear, SubastaDetalle, SubastaRespuesta
+from app.schemas import (
+    PujaCrear, PujaRespuesta, SubastaConProducto, SubastaCrear, SubastaDetalle, SubastaRespuesta,
+)
 from app.security import requiere_comprador, requiere_productor
 from app.services.subastas import ahora, cerrar_si_vencida, registrar_puja
 
@@ -50,10 +52,12 @@ def crear_subasta(
     db.refresh(subasta)
     return subasta
 
-
-@router.get("", response_model=list[SubastaRespuesta])
+@router.get("", response_model=list[SubastaConProducto])
 def listar_subastas(estado: EstadoSubasta | None = None, db: Session = Depends(get_db)):
-    subastas = db.scalars(select(Subasta).order_by(Subasta.fecha_fin)).all()
+    # selectinload trae todos los productos en UNA consulta extra, no una por subasta
+    subastas = db.scalars(
+        select(Subasta).options(selectinload(Subasta.producto)).order_by(Subasta.fecha_fin)
+    ).all()
     if any([cerrar_si_vencida(s, db) for s in subastas]):
         db.commit()
     if estado:

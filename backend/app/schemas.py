@@ -128,9 +128,13 @@ class SubastaRespuesta(BaseModel):
     ganador_id: int | None
 
 
-class SubastaDetalle(SubastaRespuesta):
+class SubastaConProducto(SubastaRespuesta):
     producto: ProductoRespuesta
+
+
+class SubastaDetalle(SubastaConProducto):
     pujas: list[PujaRespuesta]
+    
 
 # ---------- IA ----------
 
