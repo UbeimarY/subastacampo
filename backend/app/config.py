@@ -7,6 +7,8 @@ class Settings(BaseSettings):
     postgres_db: str
     postgres_host: str = "localhost"
     postgres_port: int = 5432
+    jwt_secret: str
+    jwt_expire_minutes: int = 60 * 24  # el token dura 1 día
 
     model_config = SettingsConfigDict(env_file="../.env", extra="ignore")
 
