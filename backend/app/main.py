@@ -6,11 +6,14 @@ from fastapi import Depends, FastAPI
 from fastapi.concurrency import run_in_threadpool
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.database import get_db
 from app.realtime import gestor
 from app.routers import auth, productos, subastas, tiempo_real
 from app.services.subastas import cerrar_vencidas
+from app.config import settings
+
 
 logger = logging.getLogger("subastacampo")
 
@@ -35,6 +38,14 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="SubastaCampo API", version="0.1.0", lifespan=lifespan)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 app.include_router(auth.router)
 app.include_router(productos.router)
 app.include_router(subastas.router)
