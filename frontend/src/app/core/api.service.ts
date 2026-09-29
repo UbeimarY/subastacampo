@@ -10,6 +10,7 @@ import {
   Subasta,
   SubastaConProducto,
   SubastaCrear,
+  Puja,
 } from './models';
 
 @Injectable({ providedIn: 'root' })
@@ -39,5 +40,9 @@ export class ApiService {
   // ---------- IA ----------
   precioSugerido(productoId: number): Observable<PrecioSugerido> {
     return this.http.get<PrecioSugerido>(`${this.api}/productos/${productoId}/precio-sugerido`);
+  }
+
+  pujar(subastaId: number, monto: number): Observable<Puja> {
+    return this.http.post<Puja>(`${this.api}/subastas/${subastaId}/pujas`, { monto });
   }
 }

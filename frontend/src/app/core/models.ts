@@ -89,3 +89,27 @@ export interface PrecioSugerido {
   modelo_version: string;
 }
 
+export type NivelRiesgo = 'bajo' | 'medio' | 'alto';
+
+export interface Puja {
+  id: number;
+  subasta_id: number;
+  usuario_id: number;
+  monto: string;
+  creado_en: string;
+  riesgo: number;
+  motivos_riesgo: string | null;
+  extendio_cierre: boolean;
+  nivel_riesgo: NivelRiesgo;
+}
+
+export interface SubastaDetalle extends SubastaConProducto {
+  pujas: Puja[];
+}
+
+/** Mensajes que envía el servidor por el WebSocket de la sala. */
+export type EventoSala =
+  | { tipo: 'estado_inicial'; subasta: SubastaDetalle }
+  | { tipo: 'nueva_puja'; puja: Puja; subasta: Subasta }
+  | { tipo: 'subasta_finalizada'; subasta: Subasta };
+  

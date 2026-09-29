@@ -22,5 +22,12 @@ export const routes: Routes = [
     canActivate: [authGuard, productorGuard],
     loadComponent: () => import('./pages/mis-productos/mis-productos').then((m) => m.MisProductos),
   },
+
+    {
+    path: 'subastas/:id',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/sala-subasta/sala-subasta').then((m) => m.SalaSubasta),
+  },
+  
   { path: '**', redirectTo: '' },
 ];
