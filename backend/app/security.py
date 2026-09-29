@@ -50,3 +50,8 @@ def requiere_productor(usuario: Usuario = Depends(get_usuario_actual)) -> Usuari
     if usuario.rol != RolUsuario.productor:
         raise HTTPException(status.HTTP_403_FORBIDDEN, "Solo los productores pueden realizar esta acción")
     return usuario
+
+def requiere_comprador(usuario: Usuario = Depends(get_usuario_actual)) -> Usuario:
+    if usuario.rol != RolUsuario.comprador:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Solo los compradores pueden pujar")
+    return usuario

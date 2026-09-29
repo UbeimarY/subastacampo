@@ -4,7 +4,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, computed_field, field_validator
 
-from app.models import RolUsuario
+from app.models import EstadoSubasta, RolUsuario
 
 
 # ---------- Usuarios ----------
@@ -77,3 +77,45 @@ class ProductoRespuesta(BaseModel):
     def dias_restantes(self) -> int:
         vence = self.fecha_cosecha + timedelta(days=self.vida_util_dias)
         return max(0, (vence - date.today()).days)
+
+# ---------- Subastas y pujas ----------
+
+class SubastaCrear(BaseModel):
+    producto_id: int
+    precio_inicial: Decimal = Field(gt=0, max_digits=12, decimal_places=2)
+    incremento_minimo: Decimal = Field(gt=0, max_digits=12, decimal_places=2)
+    duracion_minutos: int = Field(ge=1, le=1440)
+
+
+class PujaCrear(BaseModel):
+    monto: Decimal = Field(gt=0, max_digits=12, decimal_places=2)
+
+
+class PujaRespuesta(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    subasta_id: int
+    usuario_id: int
+    monto: Decimal
+    creado_en: datetime
+
+
+class SubastaRespuesta(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    producto_id: int
+    precio_inicial: Decimal
+    incremento_minimo: Decimal
+    precio_actual: Decimal
+    fecha_inicio: datetime
+    fecha_fin: datetime
+    estado: EstadoSubasta
+    extensiones: int
+    ganador_id: int | None
+
+
+class SubastaDetalle(SubastaRespuesta):
+    producto: ProductoRespuesta
+    pujas: list[PujaRespuesta]
