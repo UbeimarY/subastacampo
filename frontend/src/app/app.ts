@@ -1,29 +1,31 @@
-import { Component, inject, signal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { RouterOutlet } from '@angular/router';
-import { environment } from '../environments/environment';
+import { Component, inject } from '@angular/core';
+import { RouterLink, RouterOutlet } from '@angular/router';
+import { AuthService } from './core/auth.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, RouterLink],
   template: `
-    <main style="font-family: system-ui; padding: 2rem;">
-      <h1>SubastaCampo</h1>
-      <p>{{ estado() }}</p>
+    <header class="barra">
+      <a routerLink="/" class="marca">🌾 SubastaCampo</a>
+      <nav>
+        @if (auth.usuario(); as usuario) {
+          <span class="usuario">
+            {{ usuario.nombre }} <span class="insignia">{{ usuario.rol }}</span>
+          </span>
+          <button class="secundario" (click)="auth.logout()">Cerrar sesión</button>
+        } @else if (!auth.autenticado()) {
+          <a routerLink="/login">Ingresar</a>
+          <a routerLink="/registro">Registrarme</a>
+        }
+      </nav>
+    </header>
+    <main class="contenido">
       <router-outlet />
     </main>
   `,
 })
 export class App {
-  private http = inject(HttpClient);
-  estado = signal('Conectando con el backend...');
-
-  constructor() {
-    this.http
-      .get<{ status: string; database: string }>(`${environment.apiUrl}/health`)
-      .subscribe({
-        next: (r) => this.estado.set(`✅ Backend: ${r.status} · Base de datos: ${r.database}`),
-        error: () => this.estado.set('❌ No se pudo conectar con el backend'),
-      });
-  }
+  auth = inject(AuthService);
 }
+
