@@ -99,6 +99,18 @@ class PujaRespuesta(BaseModel):
     usuario_id: int
     monto: Decimal
     creado_en: datetime
+    riesgo: int
+    motivos_riesgo: str | None
+    extendio_cierre: bool
+
+    @computed_field
+    @property
+    def nivel_riesgo(self) -> str:
+        if self.riesgo >= 60:
+            return "alto"
+        if self.riesgo >= 30:
+            return "medio"
+        return "bajo"
 
 
 class SubastaRespuesta(BaseModel):

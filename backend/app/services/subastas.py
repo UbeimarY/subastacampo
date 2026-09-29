@@ -5,9 +5,10 @@ from fastapi import HTTPException, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.models import EstadoSubasta, Puja, Subasta, Usuario
 from app.database import SessionLocal
+from app.models import EstadoSubasta, Puja, Subasta, Usuario
 from app.schemas import SubastaRespuesta
+from app.services.detector_pujas import evaluar_puja
 
 VENTANA_EXTENSION = timedelta(minutes=2)
 
@@ -48,18 +49,33 @@ def registrar_puja(subasta_id: int, comprador: Usuario, monto: Decimal, db: Sess
     if monto < minimo:
         raise HTTPException(status.HTTP_400_BAD_REQUEST, f"La puja mínima en este momento es {minimo}")
 
-    puja = Puja(subasta_id=subasta.id, usuario_id=comprador.id, monto=monto)
+    momento = ahora()
+    restante = subasta.fecha_fin - momento
+    extiende = restante <= VENTANA_EXTENSION
+
+    # Detección de riesgo: se evalúa ANTES de guardar la puja y de mover el cierre
+    riesgo, motivos = evaluar_puja(subasta, comprador, restante.total_seconds(), extiende, momento, db)
+
+    puja = Puja(
+        subasta_id=subasta.id,
+        usuario_id=comprador.id,
+        monto=monto,
+        riesgo=riesgo,
+        motivos_riesgo=" | ".join(motivos) or None,
+        extendio_cierre=extiende,
+    )
     db.add(puja)
     subasta.precio_actual = monto
 
     # Anti-francotirador: garantiza 2 minutos después de una puja de último momento
-    if subasta.fecha_fin - ahora() <= VENTANA_EXTENSION:
-        subasta.fecha_fin = ahora() + VENTANA_EXTENSION
+    if extiende:
+        subasta.fecha_fin = momento + VENTANA_EXTENSION
         subasta.extensiones += 1
 
     db.commit()
     db.refresh(puja)
     return puja
+
 
 def cerrar_vencidas() -> list[dict]:
     """Cierra todas las subastas vencidas y devuelve un evento por cada una."""

@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models import EstadoSubasta, Producto, Subasta, Usuario
+from app.models import EstadoSubasta, Producto, Subasta, Usuario, Puja
 from app.realtime import gestor
 from app.schemas import PujaCrear, PujaRespuesta, SubastaCrear, SubastaDetalle, SubastaRespuesta
 from app.security import requiere_comprador, requiere_productor
@@ -95,3 +95,21 @@ async def pujar(
     respuesta, evento = await run_in_threadpool(_pujar_en_hilo, subasta_id, comprador, datos.monto, db)
     await gestor.difundir(subasta_id, evento)
     return respuesta
+
+@router.get("/{subasta_id}/pujas-sospechosas", response_model=list[PujaRespuesta])
+def pujas_sospechosas(
+    subasta_id: int,
+    productor: Usuario = Depends(requiere_productor),
+    db: Session = Depends(get_db),
+):
+    subasta = db.get(Subasta, subasta_id)
+    if subasta is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Subasta no encontrada")
+    if subasta.producto.productor_id != productor.id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Solo el productor dueño puede ver este reporte")
+    consulta = (
+        select(Puja)
+        .where(Puja.subasta_id == subasta_id, Puja.riesgo >= 30)
+        .order_by(Puja.riesgo.desc())
+    )
+    return db.scalars(consulta).all()

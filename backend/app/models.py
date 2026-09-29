@@ -2,7 +2,7 @@ import enum
 from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Index, Numeric, String, Text, func
+from sqlalchemy import DateTime, Enum, ForeignKey, Index, Numeric, String, Text, false, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -83,6 +83,9 @@ class Puja(Base):
     subasta_id: Mapped[int] = mapped_column(ForeignKey("subastas.id"))
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id"), index=True)
     monto: Mapped[Decimal] = mapped_column(Numeric(12, 2))
+    riesgo: Mapped[int] = mapped_column(default=0, server_default="0")
+    motivos_riesgo: Mapped[str | None] = mapped_column(Text)
+    extendio_cierre: Mapped[bool] = mapped_column(default=False, server_default=false())
     creado_en: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     subasta: Mapped["Subasta"] = relationship(back_populates="pujas")
