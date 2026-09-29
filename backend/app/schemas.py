@@ -119,3 +119,18 @@ class SubastaRespuesta(BaseModel):
 class SubastaDetalle(SubastaRespuesta):
     producto: ProductoRespuesta
     pujas: list[PujaRespuesta]
+
+# ---------- IA ----------
+
+class PrecioSugerido(BaseModel):
+    precio_sugerido: Decimal
+    rango_min: Decimal
+    rango_max: Decimal
+    precio_por_kg: Decimal
+    cantidad_kg: float
+    dias_restantes: int
+    demanda_categoria: float
+    factores: list[str]
+    modelo_version: str
+
+

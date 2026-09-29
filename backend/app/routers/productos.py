@@ -4,7 +4,8 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models import Producto, Usuario
-from app.schemas import Categoria, ProductoCrear, ProductoRespuesta
+from app.schemas import Categoria, PrecioSugerido, ProductoCrear, ProductoRespuesta
+from app.services.ia_precio import sugerir_precio
 from app.security import get_usuario_actual, requiere_productor
 
 router = APIRouter(prefix="/productos", tags=["productos"])
@@ -49,3 +50,10 @@ def obtener_producto(producto_id: int, db: Session = Depends(get_db)):
     if producto is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Producto no encontrado")
     return producto
+
+@router.get("/{producto_id}/precio-sugerido", response_model=PrecioSugerido)
+def precio_sugerido(producto_id: int, db: Session = Depends(get_db)):
+    producto = db.get(Producto, producto_id)
+    if producto is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Producto no encontrado")
+    return sugerir_precio(producto, db)
