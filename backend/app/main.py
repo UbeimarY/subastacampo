@@ -13,6 +13,8 @@ from app.realtime import gestor
 from app.routers import auth, productos, subastas, tiempo_real
 from app.services.subastas import cerrar_vencidas
 from app.config import settings
+from fastapi.responses import RedirectResponse
+
 
 
 logger = logging.getLogger("subastacampo")
@@ -51,6 +53,10 @@ app.include_router(productos.router)
 app.include_router(subastas.router)
 app.include_router(tiempo_real.router)
 
+@app.get("/", include_in_schema=False)
+def root():
+    """Send visitors of the bare URL to the interactive API docs."""
+    return RedirectResponse(url="/docs")
 
 @app.get("/health")
 def health(db: Session = Depends(get_db)):
